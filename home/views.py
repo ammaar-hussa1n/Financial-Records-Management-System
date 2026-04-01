@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.decorators.http import require_http_methods
 from django.utils.http import url_has_allowed_host_and_scheme
+from django.db.models import Sum
 from .models import Record, User
 
 
@@ -36,28 +37,142 @@ def upload_record(request):
 @login_required(login_url='login')
 def home(request):
     queryset = Record.objects.all()
+    users = None
+    latest_record = Record.objects.order_by('-time').first()
+    
+    total_income = 0
+    for amount in Record.objects.filter(type='Income'):
+        total_income += amount.amount
+
+    total_expense = 0
+    for amount in Record.objects.filter(type='Expense'):
+        total_expense += amount.amount
+
+    salary_total = 0
+    for amount in Record.objects.filter(category='Salary'):
+        salary_total += amount.amount
+
+    friend_total = 0
+    for amount in Record.objects.filter(category='Friend'):
+        friend_total += amount.amount
+
+    business_total = 0
+    for amount in Record.objects.filter(category='Business'):
+        business_total += amount.amount
+
+    food_total = 0
+    for amount in Record.objects.filter(category='Food'):
+        food_total += amount.amount
+
+    transportation_total = 0
+    for amount in Record.objects.filter(category='Transportation'):
+        transportation_total += amount.amount
+
+    entertainment_total = 0
+    for amount in Record.objects.filter(category='Entertainment'):
+        entertainment_total += amount.amount
+
+    groceries_total = 0
+    for amount in Record.objects.filter(category='Groceries'):
+        groceries_total += amount.amount
+
+    healthcare_total = 0
+    for amount in Record.objects.filter(category='Healthcare'):
+        healthcare_total += amount.amount
+
+    others_total = 0
+    for amount in Record.objects.filter(category='Others'):
+        others_total += amount.amount
+
 
     if request.GET.get("search"):
         queryset = queryset.filter(description__icontains=request.GET.get("search"))
 
+    if request.user.user_type == 'Admin':
+        users = User.objects.all().order_by('id')
+
     context = {
-        "records": queryset
+        "records": queryset,
+        "users": users,
+        "latest_record": latest_record,
+        "total_income": total_income,
+        "total_expense": total_expense,
+        "net_balance": total_income - total_expense,
+        "salary_total": salary_total,
+        "friend_total": friend_total,
+        "business_total": business_total,
+        "food_total": food_total,
+        "transportation_total": transportation_total,
+        "entertainment_total": entertainment_total,
+        "groceries_total": groceries_total,
+        "healthcare_total": healthcare_total,
+        "others_total": others_total
     }
 
     return render(request, "home/home.html", context)
 
 
 @login_required(login_url='login')
-def view_record(request, id):
+@require_http_methods(["POST"])
+def manage_user(request, id):
     if request.user.user_type != 'Admin':
-        messages.error(request, "Only Admin users can view records.")
+        messages.error(request, "Only Admin users can manage users.")
         return redirect('/login/?force=1')
+
+    target_user = get_object_or_404(User, id=id)
+    action = request.POST.get("action")
+
+    if action == "delete":
+        if target_user == request.user:
+            return redirect("home")
+        if target_user.is_superuser:
+            return redirect("home")
+        else :
+            target_user.delete()
+        return redirect("home")
+
+    if action == "to_analyst":
+        if target_user.is_superuser:
+            return redirect("home")
+        target_user.user_type = "Analyst"
+        target_user.save(update_fields=['user_type'])
+        return redirect("home")
+
+    if action == "to_viewer":
+        if target_user.is_superuser:
+            return redirect("home")
+        target_user.user_type = "Viewer"
+        target_user.save(update_fields=['user_type'])
+        return redirect("home")
+
+    if action == "to_admin":
+        target_user.user_type = "Admin"
+        target_user.save(update_fields=['user_type'])
+        return redirect("home")
+
+    return redirect("home")
+
+
+@login_required(login_url='login')
+def view_record(request, id):
 
     record = get_object_or_404(Record, id=id)
     context = {
         "record": record
     }
     return render(request, "home/view_record.html", context)
+
+@login_required(login_url='login')
+def edit_record(request, id):
+    if request.user.user_type != 'Admin':
+        messages.error(request, "Only Admin users can edit records.")
+        return redirect('/login/?force=1')
+
+    record = get_object_or_404(Record, id=id)
+    context = {
+        "record": record
+    }
+    return render(request, "home/edit_record.html", context)
 
 def login_page(request):
     next_url = request.POST.get("next") or request.GET.get("next")
