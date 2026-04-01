@@ -1,0 +1,48 @@
+{% extends "home/base.html" %}
+
+{% block title %}Submit An Idea{% endblock %}
+
+{% block extra_css %}
+<style>
+    table,
+    th,
+    td {
+        border: 1px solid black;
+    }
+
+    .card {
+        box-shadow: 0 18px 50px rgba(0, 0, 0, 0.72) !important;
+        margin: 15px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <form class="col-6 mx-auto card p-3 shadow-lg" method="post">
+        {% csrf_token %}
+        <h2>Upload Record</h2>
+        <hr>
+        <div class="mb-3">
+            <label class="form-label">Amount</label>
+            <input name="amount" required type="number" min="1" class="form-control">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Type</label>
+            <select name="type" required class="form-control">
+                <option value="Income">Income</option>
+                <option value="Expense">Expense</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Category</label>
+            <input name="category" required type="text" class="form-control">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Description</label>
+            <textarea name="description" class="form-control"></textarea>
+        </div>
+        <button type="submit" class="btn btn-success">Upload Record</button>
+    </form>
+</div>
+{% endblock %}

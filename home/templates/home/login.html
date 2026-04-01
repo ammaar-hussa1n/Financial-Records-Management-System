@@ -1,0 +1,48 @@
+{% extends "home/base.html" %}
+
+{% block title %}Login{% endblock %}
+
+{% block extra_css %}
+<style>
+    table,
+    th,
+    td {
+        border: 1px solid black;
+    }
+
+    .card {
+        box-shadow: 0 18px 50px rgba(0, 0, 0, 0.72) !important;
+        margin: 15px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <form class="col-6 mx-auto card p-3 shadow-lg" method="post">
+        {% csrf_token %}
+        {% if next %}
+            <input type="hidden" name="next" value="{{ next }}">
+        {% endif %}
+        <h2>Login</h2>
+        <hr>
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert {% if message.tags == 'error' %}alert-danger{% elif message.tags == 'success' %}alert-success{% else %}alert-secondary{% endif %}" role="alert">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+        <div class="mb-3">
+            <label class="form-label">Username</label>
+            <input name="username" required type="text" class="form-control">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Password</label>
+            <input name="password" required type="password" class="form-control">
+        </div>
+        <p>Don't have an account? <a href="/register/">Register</a></p>
+        <button type="submit" class="btn btn-primary">LOGIN</button>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,144 @@
+{% extends "home/base.html" %}
+{% load humanize %}
+
+{% block title %}Records{% endblock %}
+
+{% block extra_css %}
+<style>
+    table,
+    th,
+    td {
+        border: 1px solid #ddd;
+        padding: 12px 15px;
+    }
+
+    th {
+        background-color: #343a40;
+        color: white;
+        font-weight: 600;
+        text-align: center;
+    }
+
+    td {
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    tbody tr:hover {
+        background-color: #f5f5f5;
+    }
+
+    th:nth-child(1),
+    td:nth-child(1) {
+        width: 8%;
+    }
+
+    th:nth-child(2),
+    td:nth-child(2) {
+        width: 18%;
+    }
+
+    th:nth-child(3),
+    td:nth-child(3) {
+        width: 15%;
+    }
+
+    th:nth-child(4),
+    td:nth-child(4) {
+        width: 22%;
+    }
+
+    th:nth-child(5),
+    td:nth-child(5) {
+        width: 22%;
+    }
+
+    th:nth-child(6),
+    td:nth-child(6) {
+        width: 15%;
+    }
+
+    .card {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+        border: none;
+        margin: 20px 0;
+    }
+
+    .card-header {
+        border-bottom: 2px solid #007bff;
+        padding: 15px 20px;
+    }
+
+    .bottom-contact-nav {
+        background-color: #0d6efd;
+    }
+
+    .bottom-contact-nav a {
+        color: #ffffff;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .bottom-contact-nav a:hover {
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-4">
+    <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Uploaded Records</h4>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th style="text-align: center;">#</th>
+                            <th style="text-align: center;">Amount</th>
+                            <th style="text-align: center;">Type</th>
+                            <th style="text-align: center;">Category</th>
+                            <th style="text-align: center;">Time</th>
+                            {% if user.user_type == 'Admin' %}
+                            <th style="text-align: center;">Actions</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in records %}
+                        <tr>
+                            <th>{{ forloop.counter }}.</th>
+                            <td><strong>${{ record.amount|intcomma }}</strong></td>
+                            <td>{{ record.type }}</td>
+                            <td>{{ record.category }}</td>
+                            <td style="text-align: center;">{{ record.time|date:"M d, Y" }} | {{ record.time|date:"h:i A" }}</td>
+                            {% if user.user_type == 'Admin' %}
+                            <td class="text-center">
+                                <a href="{% url 'view_record' record.id %}" class="btn btn-sm btn-success m-2">View</a>
+                            </td>
+                            {% endif %}
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">
+                                No record
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<nav class="navbar bottom-contact-nav p-3 shadow-lg mt-auto">
+    <div class="container d-flex justify-content-center gap-4 py-2">
+        <a href="https://mail.google.com/mail/?view=cm&fs=1&to=ammaardxb@gmail.com" target="_blank" rel="noopener noreferrer">Gmail : ammaardxb@gmail.com</a>
+        <span class="text-white">|</span>
+        <a href="https://www.linkedin.com/in/ammaar-hussain/" target="_blank" rel="noopener noreferrer">LinkedIn : ammaar-hussain</a>
+    </div>
+</nav>
+{% endblock %}
