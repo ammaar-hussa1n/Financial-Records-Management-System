@@ -32,15 +32,14 @@
             </div>
         </div>
         <div class="card-body">
-            <h6 class="text-muted mb-3">
-                Uploaded by : {{ record.user.username }}
-            </h6>
+            <h6 class="text-muted mb-3">Uploaded by : {{ record.user.username }} | Type : {{ record.type }} | Category : {{ record.category }}</h6>
             <h5 class="mb-3">Description</h5>
             <p class="lead" style="line-height: 1.8; white-space: pre-wrap; word-wrap: break-word;">{{ record.description }}</p>
-
             <hr>
-
             <a href="{% url 'home' %}" class="btn btn-primary mt-4">Home Page</a>
+            {% if user.user_type == 'Admin' %}
+                <a href="{% url 'edit_record' record.id %}" class="btn btn-secondary mt-4">Edit Record</a>
+            {% endif %}
         </div>
     </div>
 </div>

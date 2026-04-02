@@ -1,6 +1,6 @@
 {% extends "home/base.html" %}
 
-{% block title %}Submit An Idea{% endblock %}
+{% block title %}Upload Record{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -24,18 +24,18 @@
         <h2>Upload Record</h2>
         <hr>
         <div class="mb-3">
-            <label class="form-label">Amount</label>
+            <label class="form-label">Amount*</label>
             <input name="amount" required type="number" min="1" class="form-control">
         </div>
         <div class="mb-3">
-            <label class="form-label">Type</label>
+            <label class="form-label">Type*</label>
             <select name="type" required class="form-control">
                 <option value="Income">Income</option>
                 <option value="Expense">Expense</option>
             </select>
         </div>
         <div class="mb-3">
-            <label class="form-label">Category</label>
+            <label class="form-label">Category*</label>
             <select name="category" required class="form-control">
                 <option value="Salary">Salary</option>
                 <option value="Friend">From Friend</option>

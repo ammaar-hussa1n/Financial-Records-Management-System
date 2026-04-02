@@ -13,9 +13,11 @@
         <div class="container-fluid">
             <a class="navbar-brand text-white" href="{% url 'home' %}">Record Management</a>
             {% if request.resolver_match.url_name != 'login' and request.resolver_match.url_name != 'register' %}
+            {% if user.user_type == 'Admin' or user.user_type == 'Analyst' %}
                 <form class="d-flex flex-grow-1 mx-4" method="get" action="{% url 'home' %}">
                     <input class="form-control" type="search" name="search" placeholder="Search records..." value="{{ request.GET.search }}">
                 </form>
+            {% endif %}
                 <div class="d-flex align-items-center gap-2">
                     <a class="btn btn-success btn-sm" href="{% url 'upload_record' %}">Upload Record</a>
                     {% if request.user.is_authenticated %}

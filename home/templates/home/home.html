@@ -1,7 +1,7 @@
 {% extends "home/base.html" %}
 {% load humanize %}
 
-{% block title %}Records{% endblock %}
+{% block title %}Home Page{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -77,9 +77,22 @@
         margin: 20px 0;
     }
 
+    .tables-grid .card {
+        margin: 0;
+        height: 100%;
+    }
+
     .card-header {
         border-bottom: 2px solid #007bff;
         padding: 15px 20px;
+    }
+
+    .all-records-header {
+        background-color: #0f766e !important;
+    }
+
+    .all-users-header {
+        background-color: #0f766e !important;
     }
 
     .bottom-contact-nav {
@@ -99,204 +112,409 @@
 {% endblock %}
 
 {% block content %}
-<div class="container mt-5 mb-4">
+<div class="container-fluid px-3 px-md-4 px-xl-5 mt-5 mb-4">
 
-    <div class="text mb-3">
-        <h5 class="fw-semibold mb-1">Total Income = ${{ total_income|intcomma }} | Total Expense = ${{ total_expense|intcomma }}</h5>
-        <h4 class="fw-bold mb-0">Net Balance = ${{ net_balance|intcomma }}</h4>
-        <hr class="my-3 border-secondary opacity-50">
-        {% if salary_total != 0 %}
-        <h5 class="fw-semibold mb-1">Salary Total = ${{ salary_total|intcomma }}</h5>
-        {% endif %}
-        {% if friend_total != 0 %}
-        <h5 class="fw-semibold mb-1">Friend Total = ${{ friend_total|intcomma }}</h5>
-        {% endif %}
-        {% if business_total != 0 %}
-        <h5 class="fw-semibold mb-1">Business Total = ${{ business_total|intcomma }}</h5>
-        {% endif %}
-        {% if food_total != 0 %}
-        <h5 class="fw-semibold mb-1">Food Total = ${{ food_total|intcomma }}</h5>
-        {% endif %}
-        {% if transportation_total != 0 %}
-        <h5 class="fw-semibold mb-1">Transportation Total = ${{ transportation_total|intcomma }}</h5>
-        {% endif %}
-        {% if entertainment_total != 0 %}
-        <h5 class="fw-semibold mb-1">Entertainment Total = ${{ entertainment_total|intcomma }}</h5>
-        {% endif %}
-        {% if groceries_total != 0 %}
-        <h5 class="fw-semibold mb-1">Groceries Total = ${{ groceries_total|intcomma }}</h5>
-        {% endif %}
-        {% if healthcare_total != 0 %}
-        <h5 class="fw-semibold mb-1">Healthcare Total = ${{ healthcare_total|intcomma }}</h5>
-        {% endif %}
-        {% if others_total != 0 %}
-        <h5 class="fw-semibold mb-1">Others Total = ${{ others_total|intcomma }}</h5>
-        {% endif %}
-        <hr class="my-3 border-secondary opacity-50">
-        {% if latest_record %}
-        <h5 class="fw-semibold mb-1">Most Recent Record = ${{ latest_record.amount|intcomma }} || {{ latest_record.type }} || {{ latest_record.category }}
-            || {{ latest_record.time|date:"M d, Y" }} {{ latest_record.time|date:"h:i A" }}</h5>
-        <p class="text-muted mb-0">
-            
-        </p>
-        {% else %}
-        <h5 class="fw-semibold mb-0">Most recent record: No records yet</h5>
-        {% endif %}
-    </div>
-
-    <div class="card shadow-lg">
-        <div class="card-header bg-primary text-white">
-            <h4 class="mb-0">Uploaded Records</h4>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-striped table-hover align-middle records-table">
-                    <thead class="table-dark">
-                        <tr>
-                            <th style="text-align: center;">#</th>
-                            <th style="text-align: center;">Amount</th>
-                            <th style="text-align: center;">Type</th>
-                            <th style="text-align: center;">Category</th>
-                            <th style="text-align: center;">Time</th>
-                            <th style="text-align: center;">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for record in records %}
-                        <tr>
-                            <th>{{ forloop.counter }}.</th>
-                            <td><strong>${{ record.amount|intcomma }}</strong></td>
-                            <td>{{ record.type }}</td>
-                            <td>{{ record.category }}</td>
-                            <td style="text-align: center;">{{ record.time|date:"M d, Y" }} | {{ record.time|date:"h:i A" }}</td>
-                            <td class="text-center">
-                                <a href="{% url 'view_record' record.id %}" class="btn btn-sm btn-success m-2">View</a>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="{% if user.user_type == 'Admin' %}6{% else %}5{% endif %}" class="text-center text-muted">
-                                No record
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+    {% if messages %}
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100;">
+        {% for message in messages %}
+        <div class="toast align-items-center text-bg-{% if message.tags == 'error' %}danger{% elif message.tags == 'success' %}success{% elif message.tags == 'warning' %}warning{% else %}primary{% endif %} border-0 mb-2" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="4000">
+            <div class="d-flex">
+                <div class="toast-body">{{ message }}</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
         </div>
-    </div>
-
-    {% if user.user_type == 'Admin' %}
-    <div class="card shadow-lg">
-        <div class="card-header bg-primary text-white">
-            <h4 class="mb-0">All Users</h4>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-striped table-hover align-middle users-table">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>#</th>
-                            <th>Username</th>
-                            <th>Email</th>
-                            <th>Role</th>
-                            <th>Joined</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for managed_user in users %}
-                        <tr>
-                            <th>{{ forloop.counter }}.</th>
-                            <td>
-                                {{ managed_user.username }}
-                                {% if managed_user.id == user.id %}
-                                <span class="badge bg-info text-dark ms-1">You</span>
-                                {% endif %}
-                            </td>
-                            <td>{{ managed_user.email|default:"-" }}</td>
-                            <td><span class="badge bg-secondary">{{ managed_user.user_type }}</span></td>
-                            <td>{{ managed_user.date_joined|date:"M d, Y" }}</td>
-                            <td>
-                                <div class="btn-group">
-                                    <button type="button" class="btn btn-sm btn-warning dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                                        Edit
-                                    </button>
-                                    <ul class="dropdown-menu dropdown-menu-end">
-                                        {% if managed_user.user_type == 'Analyst' %}
-                                        <li>
-                                            <form method="post" action="{% url 'manage_user' managed_user.id %}">
-                                                {% csrf_token %}
-                                                <input type="hidden" name="action" value="to_viewer">
-                                                <button type="submit" class="dropdown-item">Demote User to Viewer</button>
-                                            </form>
-                                        </li>
-
-                                        <li>
-                                            <form method="post" action="{% url 'manage_user' managed_user.id %}">
-                                                {% csrf_token %}
-                                                <input type="hidden" name="action" value="to_admin">
-                                                <button type="submit" class="dropdown-item">Promote User to Admin</button>
-                                            </form>
-                                        </li>
-                                        {% endif %}
-                                        {% if managed_user.user_type == 'Viewer' %}
-                                        <li>
-                                            <form method="post" action="{% url 'manage_user' managed_user.id %}">
-                                                {% csrf_token %}
-                                                <input type="hidden" name="action" value="to_analyst">
-                                                <button type="submit" class="dropdown-item">Promote User to Analyst</button>
-                                            </form>
-                                        </li>
-
-                                        <li>
-                                            <form method="post" action="{% url 'manage_user' managed_user.id %}">
-                                                {% csrf_token %}
-                                                <input type="hidden" name="action" value="to_admin">
-                                                <button type="submit" class="dropdown-item">Promote User to Admin</button>
-                                            </form>
-                                        </li>
-                                        {% endif %}
-                                        {% if managed_user.user_type == 'Admin' %}
-                                        <li>
-                                            <form method="post" action="{% url 'manage_user' managed_user.id %}">
-                                                {% csrf_token %}
-                                                <input type="hidden" name="action" value="to_analyst">
-                                                <button type="submit" class="dropdown-item">Demote User to Analyst</button>
-                                            </form>
-                                        </li>
-
-                                        <li>
-                                            <form method="post" action="{% url 'manage_user' managed_user.id %}">
-                                                {% csrf_token %}
-                                                <input type="hidden" name="action" value="to_viewer">
-                                                <button type="submit" class="dropdown-item">Demote User to Viewer</button>
-                                            </form>
-                                        </li>
-                                        {% endif %}
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li>
-                                            <form method="post" action="{% url 'manage_user' managed_user.id %}">
-                                                {% csrf_token %}
-                                                <input type="hidden" name="action" value="delete">
-                                                <button type="submit" class="dropdown-item text-danger" onclick="return confirm('Delete this user? This cannot be undone.');">Delete User</button>
-                                            </form>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="6" class="text-center text-muted">No users found.</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+        {% endfor %}
     </div>
     {% endif %}
+
+    <div class="text mb-3">
+        <h5 class="fw-semibold mb-1">
+            Total Income = <span class="text-success">${{ total_income|intcomma }}</span> |
+            Total Expense = <span class="text-danger">${{ total_expense|intcomma }}</span>
+        </h5>
+        <h4 class="fw-bold mb-0">
+            Net Balance =
+            <span class="{% if net_balance > 0 %}text-success{% elif net_balance < 0 %}text-danger{% else %}text-dark{% endif %}">
+                ${{ net_balance|intcomma }}
+            </span>
+        </h4>
+        <hr class="my-3 border-secondary opacity-50">
+    </div>
+
+    {% if user.user_type == 'Admin' or user.user_type == 'Analyst' %}
+    <div class="row g-4 tables-grid">
+        <div class="col-12 col-lg-6">
+            <div class="card shadow-lg">
+                <div class="card-header text-white all-records-header">
+                    <h4 class="mb-0">Uploaded Records</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover align-middle records-table">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th style="text-align: center;">#</th>
+                                    <th style="text-align: center;">Amount</th>
+                                    <th style="text-align: center;">Type</th>
+                                    <th style="text-align: center;">Category</th>
+                                    <th style="text-align: center;">Time</th>
+                                    <th style="text-align: center;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for record in records %}
+                                <tr>
+                                    <th>{% widthratio forloop.counter 1 page_number %}.</th> #ERROR ! ! ! ! !
+                                    <td><strong>${{ record.amount|intcomma }}</strong></td>
+                                    <td>{{ record.type }}</td>
+                                    <td>{{ record.category }}</td>
+                                    <td style="text-align: center;">{{ record.time|date:"M d, Y" }} | {{ record.time|date:"h:i A" }}</td>
+                                    <td class="text-center">
+                                        <a href="{% url 'view_record' record.id %}" class="btn btn-sm btn-success m-2">View</a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="{% if user.user_type == 'Admin' %}6{% else %}5{% endif %}" class="text-center text-muted">
+                                        No record
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {% if records.paginator.num_pages > 1 %}
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3">
+                        <small class="text-muted">
+                            Showing {{ records.start_index }}-{{ records.end_index }} of {{ records.paginator.count }} records
+                        </small>
+                        <nav aria-label="Uploaded records pagination">
+                            <ul class="pagination pagination-sm mb-0">
+                                {% if records.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% if request.GET.search %}search={{ request.GET.search|urlencode }}&{% endif %}records_page={{ records.previous_page_number }}">Previous</a>
+                                </li>
+                                {% else %}
+                                <li class="page-item disabled"><span class="page-link">Previous</span></li>
+                                {% endif %}
+
+                                {% for page_num in records.paginator.page_range %}
+                                    {% if page_num == records.number %}
+                                    <li class="page-item active" aria-current="page"><span class="page-link">{{ page_num }}</span></li>
+                                    {% elif page_num >= records.number|add:'-2' and page_num <= records.number|add:'2' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?{% if request.GET.search %}search={{ request.GET.search|urlencode }}&{% endif %}records_page={{ page_num }}">{{ page_num }}</a>
+                                    </li>
+                                    {% endif %}
+                                {% endfor %}
+
+                                {% if records.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% if request.GET.search %}search={{ request.GET.search|urlencode }}&{% endif %}records_page={{ records.next_page_number }}">Next</a>
+                                </li>
+                                {% else %}
+                                <li class="page-item disabled"><span class="page-link">Next</span></li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {% if user.user_type == 'Admin' %}
+        <div class="col-12 col-lg-6">
+            <div class="card shadow-lg">
+                <div class="card-header text-white all-users-header">
+                    <h4 class="mb-0">All Users</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover align-middle users-table">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Username</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Joined</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for managed_user in users %}
+                                <tr>
+                                    <th>{{ forloop.counter }}.</th>
+                                    <td>
+                                        {{ managed_user.username }}
+                                        {% if managed_user.id == user.id %}
+                                        <span class="badge bg-info text-dark ms-1">You</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ managed_user.email|default:"-" }}</td>
+                                    <td><span class="badge bg-secondary">{{ managed_user.user_type }}</span></td>
+                                    <td>{{ managed_user.date_joined|date:"M d, Y" }}</td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <button type="button" class="btn btn-sm btn-warning dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                                Edit
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end">
+                                                {% if managed_user.user_type == 'Analyst' %}
+                                                <li>
+                                                    <form method="post" action="{% url 'manage_user' managed_user.id %}">
+                                                        {% csrf_token %}
+                                                        <input type="hidden" name="action" value="to_viewer">
+                                                        <button type="submit" class="dropdown-item">Demote User to Viewer</button>
+                                                    </form>
+                                                </li>
+
+                                                <li>
+                                                    <form method="post" action="{% url 'manage_user' managed_user.id %}">
+                                                        {% csrf_token %}
+                                                        <input type="hidden" name="action" value="to_admin">
+                                                        <button type="submit" class="dropdown-item">Promote User to Admin</button>
+                                                    </form>
+                                                </li>
+                                                {% endif %}
+                                                {% if managed_user.user_type == 'Viewer' %}
+                                                <li>
+                                                    <form method="post" action="{% url 'manage_user' managed_user.id %}">
+                                                        {% csrf_token %}
+                                                        <input type="hidden" name="action" value="to_analyst">
+                                                        <button type="submit" class="dropdown-item">Promote User to Analyst</button>
+                                                    </form>
+                                                </li>
+
+                                                <li>
+                                                    <form method="post" action="{% url 'manage_user' managed_user.id %}">
+                                                        {% csrf_token %}
+                                                        <input type="hidden" name="action" value="to_admin">
+                                                        <button type="submit" class="dropdown-item">Promote User to Admin</button>
+                                                    </form>
+                                                </li>
+                                                {% endif %}
+                                                {% if managed_user.user_type == 'Admin' %}
+                                                <li>
+                                                    <form method="post" action="{% url 'manage_user' managed_user.id %}">
+                                                        {% csrf_token %}
+                                                        <input type="hidden" name="action" value="to_analyst">
+                                                        <button type="submit" class="dropdown-item">Demote User to Analyst</button>
+                                                    </form>
+                                                </li>
+
+                                                <li>
+                                                    <form method="post" action="{% url 'manage_user' managed_user.id %}">
+                                                        {% csrf_token %}
+                                                        <input type="hidden" name="action" value="to_viewer">
+                                                        <button type="submit" class="dropdown-item">Demote User to Viewer</button>
+                                                    </form>
+                                                </li>
+                                                {% endif %}
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li>
+                                                    <form method="post" action="{% url 'manage_user' managed_user.id %}">
+                                                        {% csrf_token %}
+                                                        <input type="hidden" name="action" value="delete">
+                                                        <button type="submit" class="dropdown-item text-danger" onclick="return confirm('Delete this user? This cannot be undone.');">Delete User</button>
+                                                    </form>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted">No users found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="row g-4 tables-grid">
+        <div class="col-12 col-lg-6">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Category Wise Total</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover align-middle records-table">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th style="text-align: center;">#</th>
+                                    <th style="text-align: center;">Category</th>
+                                    <th style="text-align: center;">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <th>1.</th>
+                                    <td>Salary</td>
+                                    <td><strong>${{ salary_total|intcomma }}</strong></td>
+                                </tr>
+                                <tr>
+                                    <th>2.</th>
+                                    <td>Friend</td>
+                                    <td><strong>${{ friend_total|intcomma }}</strong></td>
+                                </tr>
+                                <tr>
+                                    <th>3.</th>
+                                    <td>Business</td>
+                                    <td><strong>${{ business_total|intcomma }}</strong></td>
+                                </tr>
+                                <tr>
+                                    <th>4.</th>
+                                    <td>Food</td>
+                                    <td><strong>${{ food_total|intcomma }}</strong></td>
+                                </tr>
+                                <tr>
+                                    <th>5.</th>
+                                    <td>Transportation</td>
+                                    <td><strong>${{ transportation_total|intcomma }}</strong></td>
+                                </tr>
+                                <tr>
+                                    <th>6.</th>
+                                    <td>Entertainment</td>
+                                    <td><strong>${{ entertainment_total|intcomma }}</strong></td>
+                                </tr>
+                                <tr>
+                                    <th>7.</th>
+                                    <td>Groceries</td>
+                                    <td><strong>${{ groceries_total|intcomma }}</strong></td>
+                                </tr>
+                                <tr>
+                                    <th>8.</th>
+                                    <td>Healthcare</td>
+                                    <td><strong>${{ healthcare_total|intcomma }}</strong></td>
+                                </tr>
+                                <tr>
+                                    <th>9.</th>
+                                    <td>Others</td>
+                                    <td><strong>${{ others_total|intcomma }}</strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-6">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Latest Records Entry</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover align-middle records-table">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th style="text-align: center;">#</th>
+                                    <th style="text-align: center;">Category</th>
+                                    <th style="text-align: center;">Amount</th>
+                                    <th style="text-align: center;">Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if latest_record1 is not None %}
+                                <tr>
+                                    <th>1.</th>
+                                    <td>{{ latest_record1.category }}</td>
+                                    <td><strong>${{ latest_record1.amount|intcomma }}</strong></td>
+                                    <td>{{ latest_record1.time|date:"M d, Y" }} | {{ latest_record1.time|date:"h:i A" }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if latest_record2 is not None %}
+                                <tr>
+                                    <th>2.</th>
+                                    <td>{{ latest_record2.category }}</td>
+                                    <td><strong>${{ latest_record2.amount|intcomma }}</strong></td>
+                                    <td>{{ latest_record2.time|date:"M d, Y" }} | {{ latest_record2.time|date:"h:i A" }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if latest_record3 is not None %}
+                                <tr>
+                                    <th>3.</th>
+                                    <td>{{ latest_record3.category }}</td>
+                                    <td><strong>${{ latest_record3.amount|intcomma }}</strong></td>
+                                    <td>{{ latest_record3.time|date:"M d, Y" }} | {{ latest_record3.time|date:"h:i A" }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if latest_record4 is not None %}
+                                <tr>
+                                    <th>4.</th>
+                                    <td>{{ latest_record4.category }}</td>
+                                    <td><strong>${{ latest_record4.amount|intcomma }}</strong></td>
+                                    <td>{{ latest_record4.time|date:"M d, Y" }} | {{ latest_record4.time|date:"h:i A" }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if latest_record5 is not None %}
+                                <tr>
+                                    <th>5.</th>
+                                    <td>{{ latest_record5.category }}</td>
+                                    <td><strong>${{ latest_record5.amount|intcomma }}</strong></td>
+                                    <td>{{ latest_record5.time|date:"M d, Y" }} | {{ latest_record5.time|date:"h:i A" }}</td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-6">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Monthly Income vs Expense</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover align-middle records-table">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th style="text-align: center;">#</th>
+                                    <th style="text-align: center;">Month</th>
+                                    <th style="text-align: center;">Income</th>
+                                    <th style="text-align: center;">Expense</th>
+                                    <th style="text-align: center;">Net Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for entry in monthly_summary %}
+                                <tr>
+                                    <th>{{ forloop.counter }}.</th>
+                                    <td>{{ entry.month|date:"M Y" }}</td>
+                                    <td><strong>${{ entry.income|intcomma }}</strong></td>
+                                    <td><strong>${{ entry.expense|intcomma }}</strong></td>
+                                    <td>
+                                        <strong class="{% if entry.net <= 0 %}text-danger{% else %}text-success{% endif %}">
+                                            ${{ entry.net|intcomma }}
+                                        </strong>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted">No monthly data</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <nav class="navbar bottom-contact-nav p-3 shadow-lg mt-auto">
@@ -306,4 +524,14 @@
         <a href="https://www.linkedin.com/in/ammaar-hussain/" target="_blank" rel="noopener noreferrer">LinkedIn : ammaar-hussain</a>
     </div>
 </nav>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const toastElements = document.querySelectorAll(".toast");
+        toastElements.forEach((toastElement) => {
+            const toast = new bootstrap.Toast(toastElement);
+            toast.show();
+        });
+    });
+</script>
 {% endblock %}
