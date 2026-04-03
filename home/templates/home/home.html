@@ -164,7 +164,7 @@
                             <tbody>
                                 {% for record in records %}
                                 <tr>
-                                    <th>{% widthratio forloop.counter 1 page_number %}.</th> #ERROR ! ! ! ! !
+                                    <th>{{ records.start_index|add:forloop.counter0 }}.</th>
                                     <td><strong>${{ record.amount|intcomma }}</strong></td>
                                     <td>{{ record.type }}</td>
                                     <td>{{ record.category }}</td>
@@ -193,7 +193,7 @@
                             <ul class="pagination pagination-sm mb-0">
                                 {% if records.has_previous %}
                                 <li class="page-item">
-                                    <a class="page-link" href="?{% if request.GET.search %}search={{ request.GET.search|urlencode }}&{% endif %}records_page={{ records.previous_page_number }}">Previous</a>
+                                    <a class="page-link" href="?{% if search_query %}search={{ search_query|urlencode }}&{% endif %}{% if filter_type %}filter_type={{ filter_type|urlencode }}&{% endif %}{% if filter_category %}filter_category={{ filter_category|urlencode }}&{% endif %}{% if filter_date %}filter_date={{ filter_date|urlencode }}&{% endif %}records_page={{ records.previous_page_number }}">Previous</a>
                                 </li>
                                 {% else %}
                                 <li class="page-item disabled"><span class="page-link">Previous</span></li>
@@ -204,14 +204,14 @@
                                     <li class="page-item active" aria-current="page"><span class="page-link">{{ page_num }}</span></li>
                                     {% elif page_num >= records.number|add:'-2' and page_num <= records.number|add:'2' %}
                                     <li class="page-item">
-                                        <a class="page-link" href="?{% if request.GET.search %}search={{ request.GET.search|urlencode }}&{% endif %}records_page={{ page_num }}">{{ page_num }}</a>
+                                        <a class="page-link" href="?{% if search_query %}search={{ search_query|urlencode }}&{% endif %}{% if filter_type %}filter_type={{ filter_type|urlencode }}&{% endif %}{% if filter_category %}filter_category={{ filter_category|urlencode }}&{% endif %}{% if filter_date %}filter_date={{ filter_date|urlencode }}&{% endif %}records_page={{ page_num }}">{{ page_num }}</a>
                                     </li>
                                     {% endif %}
                                 {% endfor %}
 
                                 {% if records.has_next %}
                                 <li class="page-item">
-                                    <a class="page-link" href="?{% if request.GET.search %}search={{ request.GET.search|urlencode }}&{% endif %}records_page={{ records.next_page_number }}">Next</a>
+                                    <a class="page-link" href="?{% if search_query %}search={{ search_query|urlencode }}&{% endif %}{% if filter_type %}filter_type={{ filter_type|urlencode }}&{% endif %}{% if filter_category %}filter_category={{ filter_category|urlencode }}&{% endif %}{% if filter_date %}filter_date={{ filter_date|urlencode }}&{% endif %}records_page={{ records.next_page_number }}">Next</a>
                                 </li>
                                 {% else %}
                                 <li class="page-item disabled"><span class="page-link">Next</span></li>
@@ -239,6 +239,7 @@
                                     <th>Username</th>
                                     <th>Email</th>
                                     <th>Role</th>
+                                    <th>Status</th>
                                     <th>Joined</th>
                                     <th>Actions</th>
                                 </tr>
@@ -255,6 +256,11 @@
                                     </td>
                                     <td>{{ managed_user.email|default:"-" }}</td>
                                     <td><span class="badge bg-secondary">{{ managed_user.user_type }}</span></td>
+                                    <td>
+                                        <span class="badge {% if managed_user.is_active %}bg-success{% else %}bg-danger{% endif %}">
+                                            {% if managed_user.is_active %}Active{% else %}Inactive{% endif %}
+                                        </span>
+                                    </td>
                                     <td>{{ managed_user.date_joined|date:"M d, Y" }}</td>
                                     <td>
                                         <div class="btn-group">
@@ -317,6 +323,16 @@
                                                 <li>
                                                     <form method="post" action="{% url 'manage_user' managed_user.id %}">
                                                         {% csrf_token %}
+                                                        <input type="hidden" name="action" value="{% if managed_user.is_active %}deactivate{% else %}activate{% endif %}">
+                                                        <button type="submit" class="dropdown-item {% if managed_user.is_active %}text-info{% else %}text-success{% endif %}">
+                                                            {% if managed_user.is_active %}Mark User as Inactive{% else %}Mark User as Active{% endif %}
+                                                        </button>
+                                                    </form>
+                                                </li>
+
+                                                <li>
+                                                    <form method="post" action="{% url 'manage_user' managed_user.id %}">
+                                                        {% csrf_token %}
                                                         <input type="hidden" name="action" value="delete">
                                                         <button type="submit" class="dropdown-item text-danger" onclick="return confirm('Delete this user? This cannot be undone.');">Delete User</button>
                                                     </form>
@@ -327,7 +343,7 @@
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="6" class="text-center text-muted">No users found.</td>
+                                    <td colspan="7" class="text-center text-muted">No users found.</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -353,55 +369,29 @@
                                 <tr>
                                     <th style="text-align: center;">#</th>
                                     <th style="text-align: center;">Category</th>
-                                    <th style="text-align: center;">Total</th>
+                                    <th style="text-align: center;">Income</th>
+                                    <th style="text-align: center;">Expense</th>
+                                    <th style="text-align: center;">Net Balance</th>
                                 </tr>
                             </thead>
                             <tbody>
+                                {% for category_total in category_wise_totals %}
                                 <tr>
-                                    <th>1.</th>
-                                    <td>Salary</td>
-                                    <td><strong>${{ salary_total|intcomma }}</strong></td>
+                                    <th>{{ forloop.counter }}.</th>
+                                    <td>{{ category_total.category }}</td>
+                                    <td>${{ category_total.income|intcomma }}</td>
+                                    <td>${{ category_total.expense|intcomma }}</td>
+                                    <td>
+                                        <strong class="{% if category_total.net > 0 %}text-success{% elif category_total.net < 0 %}text-danger{% else %}text-dark{% endif %}">
+                                            ${{ category_total.net|intcomma }}
+                                        </strong>
+                                    </td>
                                 </tr>
+                                {% empty %}
                                 <tr>
-                                    <th>2.</th>
-                                    <td>Friend</td>
-                                    <td><strong>${{ friend_total|intcomma }}</strong></td>
+                                    <td colspan="5" class="text-center text-muted">No category data</td>
                                 </tr>
-                                <tr>
-                                    <th>3.</th>
-                                    <td>Business</td>
-                                    <td><strong>${{ business_total|intcomma }}</strong></td>
-                                </tr>
-                                <tr>
-                                    <th>4.</th>
-                                    <td>Food</td>
-                                    <td><strong>${{ food_total|intcomma }}</strong></td>
-                                </tr>
-                                <tr>
-                                    <th>5.</th>
-                                    <td>Transportation</td>
-                                    <td><strong>${{ transportation_total|intcomma }}</strong></td>
-                                </tr>
-                                <tr>
-                                    <th>6.</th>
-                                    <td>Entertainment</td>
-                                    <td><strong>${{ entertainment_total|intcomma }}</strong></td>
-                                </tr>
-                                <tr>
-                                    <th>7.</th>
-                                    <td>Groceries</td>
-                                    <td><strong>${{ groceries_total|intcomma }}</strong></td>
-                                </tr>
-                                <tr>
-                                    <th>8.</th>
-                                    <td>Healthcare</td>
-                                    <td><strong>${{ healthcare_total|intcomma }}</strong></td>
-                                </tr>
-                                <tr>
-                                    <th>9.</th>
-                                    <td>Others</td>
-                                    <td><strong>${{ others_total|intcomma }}</strong></td>
-                                </tr>
+                                {% endfor %}
                             </tbody>
                         </table>
                     </div>

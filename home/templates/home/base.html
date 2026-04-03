@@ -14,8 +14,25 @@
             <a class="navbar-brand text-white" href="{% url 'home' %}">Record Management</a>
             {% if request.resolver_match.url_name != 'login' and request.resolver_match.url_name != 'register' %}
             {% if user.user_type == 'Admin' or user.user_type == 'Analyst' %}
-                <form class="d-flex flex-grow-1 mx-4" method="get" action="{% url 'home' %}">
-                    <input class="form-control" type="search" name="search" placeholder="Search records..." value="{{ request.GET.search }}">
+                <form class="d-flex flex-grow-1 mx-4 gap-2" method="get" action="{% url 'home' %}">
+                    <select class="form-select form-select-sm" name="filter_type" style="max-width: 140px;">
+                        <option value="">All Types</option>
+                        {% for type_value, type_label in filter_type_choices %}
+                        <option value="{{ type_value }}" {% if filter_type == type_value %}selected{% endif %}>{{ type_label }}</option>
+                        {% endfor %}
+                    </select>
+
+                    <select class="form-select form-select-sm" name="filter_category" style="max-width: 160px;">
+                        <option value="">All Categories</option>
+                        {% for category_value, category_label in filter_category_choices %}
+                        <option value="{{ category_value }}" {% if filter_category == category_value %}selected{% endif %}>{{ category_label }}</option>
+                        {% endfor %}
+                    </select>
+
+                    <input class="form-control form-control-sm" type="date" name="filter_date" value="{{ filter_date }}" style="max-width: 150px;">
+                    <input class="form-control" type="search" name="search" placeholder="Search records..." value="{{ search_query|default:'' }}">
+                    <button class="btn btn-light btn-sm" type="submit">Filter</button>
+                    <a class="btn btn-outline-light btn-sm" href="{% url 'home' %}">Clear</a>
                 </form>
             {% endif %}
                 <div class="d-flex align-items-center gap-2">
