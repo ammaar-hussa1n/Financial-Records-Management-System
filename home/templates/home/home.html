@@ -127,11 +127,12 @@
     </div>
     {% endif %}
 
-    <div class="text mb-3">
-        <h5 class="fw-semibold mb-1">
-            Total Income = <span class="text-success">${{ total_income|intcomma }}</span> |
-            Total Expense = <span class="text-danger">${{ total_expense|intcomma }}</span>
-        </h5>
+    <div class="text mb-3 text-center">
+        <h4 class="fw-semibold mb-1 d-flex justify-content-center align-items-center flex-wrap gap-2">
+            <span>Total Income = <span class="badge rounded-pill text-bg-success">${{ total_income|intcomma }}</span></span>
+            <span class="text-muted">|</span>
+            <span>Total Expense = <span class="badge rounded-pill text-bg-danger">${{ total_expense|intcomma }}</span></span>
+        </h4>
         <h4 class="fw-bold mb-0">
             Net Balance =
             <span class="{% if net_balance > 0 %}text-success{% elif net_balance < 0 %}text-danger{% else %}text-dark{% endif %}">
