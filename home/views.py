@@ -159,7 +159,7 @@ def home(request):
     records_page = None
     page_number = None
 
-    #Uploaded records page
+    #Uploaded Records page
     if request.user.user_type == 'Admin' or request.user.user_type == 'Analyst':
         records_paginator = Paginator(queryset, 5)
         records_page_number = request.GET.get("records_page")
@@ -167,9 +167,12 @@ def home(request):
         page_number = records_page.number
 
     users = None
-    #All users page for Admin
+    #All Users page
     if request.user.user_type == 'Admin':
-        users = User.objects.all().order_by('id')
+        users_queryset = User.objects.all().order_by('id')
+        users_paginator = Paginator(users_queryset, 8)
+        users_page_number = request.GET.get("users_page")
+        users = users_paginator.get_page(users_page_number)
 
     context = {
         "records": records_page,

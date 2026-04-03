@@ -89,10 +89,41 @@
 
     .all-records-header {
         background-color: #0f766e !important;
+        border-bottom: 2px solid #0f766e !important;
     }
 
     .all-users-header {
         background-color: #0f766e !important;
+        border-bottom: 2px solid #0f766e !important;
+    }
+
+    .latest-records-card {
+        height: auto !important;
+    }
+
+    .latest-records-table,
+    .latest-records-table th,
+    .latest-records-table td {
+        border: 1px solid #ddd;
+        padding: 8px 10px;
+    }
+
+    .latest-records-table th {
+        background-color: #343a40;
+        color: white;
+        font-weight: 600;
+        text-align: center;
+    }
+
+    .latest-records-table td {
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    .latest-records-table tbody th {
+        background-color: #343a40 !important;
+        color: #ffffff !important;
+        font-weight: 600;
     }
 
     .bottom-contact-nav {
@@ -142,8 +173,8 @@
         <hr class="my-3 border-secondary opacity-50">
     </div>
 
-    {% if user.user_type == 'Admin' or user.user_type == 'Analyst' %}
     <div class="row g-4 tables-grid">
+        {% if user.user_type == 'Admin' or user.user_type == 'Analyst' %}
         <div class="col-12 col-lg-6">
             <div class="card shadow-lg">
                 <div class="card-header text-white all-records-header">
@@ -194,7 +225,7 @@
                             <ul class="pagination pagination-sm mb-0">
                                 {% if records.has_previous %}
                                 <li class="page-item">
-                                    <a class="page-link" href="?{% if search_query %}search={{ search_query|urlencode }}&{% endif %}{% if filter_type %}filter_type={{ filter_type|urlencode }}&{% endif %}{% if filter_category %}filter_category={{ filter_category|urlencode }}&{% endif %}{% if filter_date %}filter_date={{ filter_date|urlencode }}&{% endif %}records_page={{ records.previous_page_number }}">Previous</a>
+                                    <a class="page-link" href="?{% if search_query %}search={{ search_query|urlencode }}&{% endif %}{% if filter_type %}filter_type={{ filter_type|urlencode }}&{% endif %}{% if filter_category %}filter_category={{ filter_category|urlencode }}&{% endif %}{% if filter_date %}filter_date={{ filter_date|urlencode }}&{% endif %}{% if users %}users_page={{ users.number }}&{% endif %}records_page={{ records.previous_page_number }}">Previous</a>
                                 </li>
                                 {% else %}
                                 <li class="page-item disabled"><span class="page-link">Previous</span></li>
@@ -205,14 +236,14 @@
                                     <li class="page-item active" aria-current="page"><span class="page-link">{{ page_num }}</span></li>
                                     {% elif page_num >= records.number|add:'-2' and page_num <= records.number|add:'2' %}
                                     <li class="page-item">
-                                        <a class="page-link" href="?{% if search_query %}search={{ search_query|urlencode }}&{% endif %}{% if filter_type %}filter_type={{ filter_type|urlencode }}&{% endif %}{% if filter_category %}filter_category={{ filter_category|urlencode }}&{% endif %}{% if filter_date %}filter_date={{ filter_date|urlencode }}&{% endif %}records_page={{ page_num }}">{{ page_num }}</a>
+                                        <a class="page-link" href="?{% if search_query %}search={{ search_query|urlencode }}&{% endif %}{% if filter_type %}filter_type={{ filter_type|urlencode }}&{% endif %}{% if filter_category %}filter_category={{ filter_category|urlencode }}&{% endif %}{% if filter_date %}filter_date={{ filter_date|urlencode }}&{% endif %}{% if users %}users_page={{ users.number }}&{% endif %}records_page={{ page_num }}">{{ page_num }}</a>
                                     </li>
                                     {% endif %}
                                 {% endfor %}
 
                                 {% if records.has_next %}
                                 <li class="page-item">
-                                    <a class="page-link" href="?{% if search_query %}search={{ search_query|urlencode }}&{% endif %}{% if filter_type %}filter_type={{ filter_type|urlencode }}&{% endif %}{% if filter_category %}filter_category={{ filter_category|urlencode }}&{% endif %}{% if filter_date %}filter_date={{ filter_date|urlencode }}&{% endif %}records_page={{ records.next_page_number }}">Next</a>
+                                    <a class="page-link" href="?{% if search_query %}search={{ search_query|urlencode }}&{% endif %}{% if filter_type %}filter_type={{ filter_type|urlencode }}&{% endif %}{% if filter_category %}filter_category={{ filter_category|urlencode }}&{% endif %}{% if filter_date %}filter_date={{ filter_date|urlencode }}&{% endif %}{% if users %}users_page={{ users.number }}&{% endif %}records_page={{ records.next_page_number }}">Next</a>
                                 </li>
                                 {% else %}
                                 <li class="page-item disabled"><span class="page-link">Next</span></li>
@@ -224,6 +255,7 @@
                 </div>
             </div>
         </div>
+        {% endif %}
 
         {% if user.user_type == 'Admin' %}
         <div class="col-12 col-lg-6">
@@ -248,7 +280,7 @@
                             <tbody>
                                 {% for managed_user in users %}
                                 <tr>
-                                    <th>{{ forloop.counter }}.</th>
+                                    <th>{{ users.start_index|add:forloop.counter0 }}.</th>
                                     <td>
                                         {{ managed_user.username }}
                                         {% if managed_user.id == user.id %}
@@ -325,7 +357,7 @@
                                                     <form method="post" action="{% url 'manage_user' managed_user.id %}">
                                                         {% csrf_token %}
                                                         <input type="hidden" name="action" value="{% if managed_user.is_active %}deactivate{% else %}activate{% endif %}">
-                                                        <button type="submit" class="dropdown-item {% if managed_user.is_active %}text-info{% else %}text-success{% endif %}">
+                                                        <button type="submit" class="dropdown-item {% if managed_user.is_active %}text-danger{% else %}text-success{% endif %}">
                                                             {% if managed_user.is_active %}Mark User as Inactive{% else %}Mark User as Active{% endif %}
                                                         </button>
                                                     </form>
@@ -350,14 +382,48 @@
                             </tbody>
                         </table>
                     </div>
+
+                    {% if users.paginator.num_pages > 1 %}
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3">
+                        <small class="text-muted">
+                            Showing {{ users.start_index }}-{{ users.end_index }} of {{ users.paginator.count }} users
+                        </small>
+                        <nav aria-label="All users pagination">
+                            <ul class="pagination pagination-sm mb-0">
+                                {% if users.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% if search_query %}search={{ search_query|urlencode }}&{% endif %}{% if filter_type %}filter_type={{ filter_type|urlencode }}&{% endif %}{% if filter_category %}filter_category={{ filter_category|urlencode }}&{% endif %}{% if filter_date %}filter_date={{ filter_date|urlencode }}&{% endif %}{% if records %}records_page={{ records.number }}&{% endif %}users_page={{ users.previous_page_number }}">Previous</a>
+                                </li>
+                                {% else %}
+                                <li class="page-item disabled"><span class="page-link">Previous</span></li>
+                                {% endif %}
+
+                                {% for page_num in users.paginator.page_range %}
+                                    {% if page_num == users.number %}
+                                    <li class="page-item active" aria-current="page"><span class="page-link">{{ page_num }}</span></li>
+                                    {% elif page_num >= users.number|add:'-2' and page_num <= users.number|add:'2' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?{% if search_query %}search={{ search_query|urlencode }}&{% endif %}{% if filter_type %}filter_type={{ filter_type|urlencode }}&{% endif %}{% if filter_category %}filter_category={{ filter_category|urlencode }}&{% endif %}{% if filter_date %}filter_date={{ filter_date|urlencode }}&{% endif %}{% if records %}records_page={{ records.number }}&{% endif %}users_page={{ page_num }}">{{ page_num }}</a>
+                                    </li>
+                                    {% endif %}
+                                {% endfor %}
+
+                                {% if users.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% if search_query %}search={{ search_query|urlencode }}&{% endif %}{% if filter_type %}filter_type={{ filter_type|urlencode }}&{% endif %}{% if filter_category %}filter_category={{ filter_category|urlencode }}&{% endif %}{% if filter_date %}filter_date={{ filter_date|urlencode }}&{% endif %}{% if records %}records_page={{ records.number }}&{% endif %}users_page={{ users.next_page_number }}">Next</a>
+                                </li>
+                                {% else %}
+                                <li class="page-item disabled"><span class="page-link">Next</span></li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
         {% endif %}
-    </div>
-    {% endif %}
 
-    <div class="row g-4 tables-grid">
         <div class="col-12 col-lg-6">
             <div class="card shadow-lg">
                 <div class="card-header bg-primary text-white">
@@ -401,13 +467,13 @@
         </div>
 
         <div class="col-12 col-lg-6">
-            <div class="card shadow-lg">
+            <div class="card shadow-lg latest-records-card">
                 <div class="card-header bg-primary text-white">
                     <h4 class="mb-0">Latest Records Entry</h4>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-striped table-hover align-middle records-table">
+                        <table class="table table-striped table-hover align-middle latest-records-table">
                             <thead class="table-dark">
                                 <tr>
                                     <th style="text-align: center;">#</th>
