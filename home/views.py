@@ -15,6 +15,8 @@ from .models import Record, User
 
 @login_required(login_url='login')
 def upload_record(request):
+    
+    # Only Admin can upload records
     if request.user.user_type != 'Admin':
         messages.error(request, "Only Admin users can upload records.")
         return redirect("home")
@@ -63,9 +65,12 @@ def upload_record(request):
 
 @login_required(login_url='login')
 def home(request):
-    queryset = Record.objects.all()
-    users = None
-    latest_records = list(Record.objects.order_by('-time')[:5])
+    
+    #Show only Valid records in home page
+    queryset = Record.objects.filter(validity=True).all()
+
+    #Recent Activity records
+    latest_records = list(Record.objects.filter(validity=True).order_by('-time')[:5])
     latest_record1 = latest_records[0] if len(latest_records) > 0 else None
     latest_record2 = latest_records[1] if len(latest_records) > 1 else None
     latest_record3 = latest_records[2] if len(latest_records) > 2 else None
@@ -73,17 +78,18 @@ def home(request):
     latest_record5 = latest_records[4] if len(latest_records) > 4 else None
 
     totals = Record.objects.aggregate(
-        total_income=Coalesce(Sum('amount', filter=Q(type='Income')), 0),
-        total_expense=Coalesce(Sum('amount', filter=Q(type='Expense')), 0),
+        total_income=Coalesce(Sum('amount', filter=Q(type='Income', validity=True)), 0),
+        total_expense=Coalesce(Sum('amount', filter=Q(type='Expense', validity=True)), 0),
     )
     total_income = totals['total_income']
     total_expense = totals['total_expense']
 
+    #Category wise records
     category_breakdown = {
         item['category']: item
-        for item in Record.objects.values('category').annotate(
-            income=Coalesce(Sum('amount', filter=Q(type='Income')), 0),
-            expense=Coalesce(Sum('amount', filter=Q(type='Expense')), 0),
+        for item in Record.objects.filter(validity=True).values('category').annotate(
+            income=Coalesce(Sum('amount', filter=Q(type='Income', validity=True)), 0),
+            expense=Coalesce(Sum('amount', filter=Q(type='Expense', validity=True)), 0),
         )
     }
 
@@ -99,10 +105,11 @@ def home(request):
             'net': income_total - expense_total,
         })
 
+    #Monthly trends
     monthly_summary = (
-        Record.objects.annotate(month=TruncMonth('time')).values('month').annotate(
-            income=Coalesce(Sum('amount', filter=Q(type='Income')), 0),
-            expense=Coalesce(Sum('amount', filter=Q(type='Expense')), 0),
+        Record.objects.filter(validity=True).annotate(month=TruncMonth('time')).values('month').annotate(
+            income=Coalesce(Sum('amount', filter=Q(type='Income', validity=True)), 0),
+            expense=Coalesce(Sum('amount', filter=Q(type='Expense', validity=True)), 0),
         ).order_by('-month')[:12]
     )
 
@@ -110,6 +117,7 @@ def home(request):
     for entry in monthly_summary:
         entry['net'] = entry['income'] - entry['expense']
 
+    #Search and Filter functionality
     filter_type_choices = Record._meta.get_field('type').choices
     filter_category_choices = Record._meta.get_field('category').choices
     search_query = request.GET.get("search", "").strip()
@@ -148,16 +156,24 @@ def home(request):
         except ValueError:
             filter_date = ""
 
-    records_paginator = Paginator(queryset, 5)
-    records_page_number = request.GET.get("records_page")
-    records_page = records_paginator.get_page(records_page_number)
+    records_page = None
+    page_number = None
 
+    #Uploaded records page
+    if request.user.user_type == 'Admin' or request.user.user_type == 'Analyst':
+        records_paginator = Paginator(queryset, 5)
+        records_page_number = request.GET.get("records_page")
+        records_page = records_paginator.get_page(records_page_number)
+        page_number = records_page.number
+
+    users = None
+    #All users page for Admin
     if request.user.user_type == 'Admin':
         users = User.objects.all().order_by('id')
 
     context = {
         "records": records_page,
-        "page_number": records_page.number,
+        "page_number": page_number,
         "users": users,
         "latest_record1": latest_record1,
         "latest_record2": latest_record2,
@@ -198,35 +214,47 @@ def manage_user(request, id):
             messages.error(request, "Can not delete a superuser account.")
             return redirect("home")
         else :
-            messages.success(request, "User deleted successfully!")
             target_user.delete()
+            messages.success(request, "User deleted successfully!")
         return redirect("home")
 
     if action == "to_analyst":
+        if target_user == request.user:
+            messages.error(request, "You can not change the role of your own account.")
+            return redirect("home")
         if target_user.is_superuser:
             messages.error(request, "Can not change role of a superuser account.")
             return redirect("home")
-        target_user.user_type = "Analyst"
-        target_user.save(update_fields=['user_type'])
-        messages.success(request, "User role updated to Analyst successfully!")
+        else :
+            target_user.user_type = "Analyst"
+            target_user.save(update_fields=['user_type'])
+            messages.success(request, "User role updated to Analyst successfully!")
         return redirect("home")
 
     if action == "to_viewer":
+        if target_user == request.user:
+            messages.error(request, "You can not change the role of your own account.")
+            return redirect("home")
         if target_user.is_superuser:
             messages.error(request, "Can not change role of a superuser account.")
             return redirect("home")
-        target_user.user_type = "Viewer"
-        target_user.save(update_fields=['user_type'])
-        messages.success(request, "User role updated to Viewer successfully!")
+        else :
+            target_user.user_type = "Viewer"
+            target_user.save(update_fields=['user_type'])
+            messages.success(request, "User role updated to Viewer successfully!")
         return redirect("home")
 
     if action == "to_admin":
+        if target_user == request.user:
+            messages.error(request, "You can not change the role of your own account.")
+            return redirect("home")
         if target_user.is_superuser:
             messages.error(request, "Can not change role of a superuser account.")
             return redirect("home")
-        target_user.user_type = "Admin"
-        target_user.save(update_fields=['user_type'])
-        messages.success(request, "User role updated to Admin successfully!")
+        else :
+            target_user.user_type = "Admin"
+            target_user.save(update_fields=['user_type'])
+            messages.success(request, "User role updated to Admin successfully!")
         return redirect("home")
 
     if action == "deactivate":
@@ -239,18 +267,23 @@ def manage_user(request, id):
         if not target_user.is_active:
             messages.warning(request, "User is already inactive.")
             return redirect("home")
-        target_user.is_active = False
-        target_user.save(update_fields=['is_active'])
-        messages.success(request, "User deactivated successfully!")
+        else :
+            target_user.is_active = False
+            target_user.save(update_fields=['is_active'])
+            messages.success(request, "User deactivated successfully!")
         return redirect("home")
 
     if action == "activate":
+        if target_user.is_superuser:
+            messages.error(request, "Can not activate a superuser account.")
+            return redirect("home")
         if target_user.is_active:
             messages.warning(request, "User is already active.")
             return redirect("home")
-        target_user.is_active = True
-        target_user.save(update_fields=['is_active'])
-        messages.success(request, "User activated successfully!")
+        else :
+            target_user.is_active = True
+            target_user.save(update_fields=['is_active'])
+            messages.success(request, "User activated successfully!")
         return redirect("home")
 
     return redirect("home")
@@ -261,26 +294,29 @@ def view_record(request, id):
     if request.user.user_type == 'Viewer':
         messages.error(request, "Only Admin and Analyst can view records.")
         return redirect("home")
-    record = get_object_or_404(Record, id=id)
+
+    record = get_object_or_404(Record, id=id, validity=True)
+
     context = {
         "record": record
     }
     return render(request, "home/view_record.html", context)
-
+    
 
 @login_required(login_url='login')
 def edit_record(request, id):
     if request.user.user_type != 'Admin':
         messages.error(request, "Only Admin users can edit records.")
         return redirect("home")
-
-    record = get_object_or_404(Record, id=id)
+        
+    record = get_object_or_404(Record, id=id, validity=True)
 
     if request.method == "POST":
         action = request.POST.get("action")
 
         if action == "delete":
-            record.delete()
+            record.validity = False
+            record.save(update_fields=['validity'])
             messages.success(request, "Record deleted successfully.")
             return redirect("home")
 
@@ -298,7 +334,7 @@ def edit_record(request, id):
             if parsed_amount <= 0:
                 raise ValueError
         except ValueError:
-            messages.error(request, "Amount must be a positive number.")
+            messages.error(request, "Amount must be greater than zero.")
             return render(request, "home/edit_record.html", {"record": record})
 
         valid_types = {choice for choice, _ in Record._meta.get_field("type").choices}
@@ -327,11 +363,10 @@ def edit_record(request, id):
 
 def login_page(request):
     next_url = request.POST.get("next") or request.GET.get("next")
-    force_login = request.GET.get("force") == "1"
     username = None
     password = None
 
-    if request.user.is_authenticated and not force_login:
+    if request.user.is_authenticated:
         if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
             return redirect(next_url)
         return redirect("home")

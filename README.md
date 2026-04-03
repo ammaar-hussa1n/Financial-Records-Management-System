@@ -1,65 +1,76 @@
 # Financial Records Management System
 
-Internship Assignment project built with Django for managing financial records with role-based access control.
+Internship assignment project for financial record management, with role-based access control, using Django.
 
-## 1. Assignment Overview
+## Overview
 
-This system provides:
-- User authentication (register, login, logout)
-- Role-based authorization (Admin, Analyst, Viewer)
-- Financial record management (create, read, update, delete)
-- Dashboard insights (totals, category-wise net, monthly summary, recent activity)
-- Search and filter support for records
-- User administration controls (role change, activate/deactivate, delete)
+Implemented capabilities:
+- Authentication : register, login, logout
+- Roles : Admin, Analyst, Viewer
+- Record operations : create, read, update, soft delete
+- Dashboard analytics : totals, category wise totals, monthly summary, recent record activity
+- Admin user management : role updates, activate/deactivate, delete
+- Search or filters in records
 
-## 2. Functional Scope Completed
+## Final Backend Behavior
 
-### User and Role Management
-- Custom user model with roles: Viewer, Analyst, Admin
-- Registration with Django password validation
-- Login/logout flow with session-based authentication
-- Admin can manage users and update user roles
-- Admin can activate/deactivate users and delete users (with safety checks)
+### User and role management
+- Custom `User` model with `user_type` (Viewer, Analyst, Admin)
+- Password validation uses Django built-in validators
+- Login supports safe `next` redirects with allowed-host checks
+- Admin safety checks :
+  - Can not change/delete/deactivate/activate own account
+  - Can not change/delete/deactivate/activate superuser accounts
 
-### Financial Record Management
-- Record fields: amount, type, category, timestamp, description, owner
-- Admin can upload records
-- Admin can edit and delete records
+### Records and soft delete
+- Admin can upload and edit records
+- Delete from edit sets `validity = False` (soft delete)
 - Admin and Analyst can view record details
+- Soft deleted records are blocked in view/edit page
 
-### Dashboard and Analytics
-- Total income, total expense, and net balance
-- Category-wise table with income, expense, and net balance
-- Net values color-coded by positive/negative value
-- Monthly income vs expense summary with monthly net
-- Recent activity list (latest records)
-- Uploaded records table with pagination
+### Dashboard and data scope
+- All dashboard record data is scoped to active records
+- Includes :
+  - Total income, total expense, net balance
+  - Category-wise income/expense/net table
+  - Monthly income vs expense summary
+  - Recent activity (latest 5 active records)
+- Uploaded records table uses pagination (5 per page)
 
-### Search and Filtering
-- Filters in top navbar: type, category, date, and text search
-- Filters apply to uploaded records table
-- Pagination retains filter/search query values
-- Viewer is blocked from using search/filter through direct URL query parameters
+### Search and filtering
+- Filters : type, category, date, and description search
+- Invalid filter values are normalized to empty values
+- Pagination retains active filter/query values
+- Viewer can not search or filter
 
-## 3. Role Permissions Matrix
+## Role Permissions Matrix
+- Dashboard summary and analytics tables : Admin / Analyst / Viewer
+- Uploaded records table and pagination : Admin / Analyst
+- Record details : Admin / Analyst
+- Search/filter actions : Admin / Analyst
+- Record managment : Admin
+- User management : Admin
 
-View Dasboard = Admin, Analyst & Viewer
+## Main Routes
 
-View Record Details = Admin & Analyst ONLY
-Search/Filter records = Admin & Analyst ONLY
+- `/` : Dashboard (login required)
+- `/login/` : Login page
+- `/register/` : Register page
+- `/logout/` : Logout action (POST)
+- `/upload-record/` : Upload record (Admin only)
+- `/view-record/<id>/` : View record details (Admin/Analyst only)
+- `/edit-record/<id>/` : Edit or soft delete record (Admin only)
+- `/manage-user/<id>/` : User management action endpoint (Admin only, POST)
+- `/admin/` : Django admin panel
 
-Upload, Edit or Delete Record = Admin ONLY
-View All Users = Admin ONLY
-Edit User role, status or Delete = Admin ONLY
-
-## 4. Tech Stack
+## Tech Stack
 
 - Python
 - Django
-- SQLite (db.sqlite3)
-- Bootstrap 5 (UI styling)
+- SQLite (`db.sqlite3`)
+- Bootstrap 5
 
-## 5. Project Structure
+## Project Structure
 
 ```
 Financial-Records-Management-System/
@@ -85,14 +96,13 @@ Financial-Records-Management-System/
 |       |-- edit_record.html
 ```
 
-## 6. Local Setup and Run
+## Local Setup
 
-### Prerequisites
+Prerequisites:
 - Python 3.10+
 - pip
 
-### Installation
-
+Steps:
 1. Clone or download this repository.
 2. Open terminal in project root.
 3. Create virtual environment:
@@ -101,7 +111,7 @@ Financial-Records-Management-System/
 python -m venv .venv
 ```
 
-4. Activate virtual environment (Windows PowerShell):
+4. Activate environment (PowerShell):
 
 ```powershell
 .\.venv\Scripts\Activate.ps1
@@ -119,7 +129,7 @@ pip install django
 python manage.py migrate
 ```
 
-7. (Optional) Create admin user:
+7. Optional: create admin user
 
 ```powershell
 python manage.py createsuperuser
@@ -131,37 +141,17 @@ python manage.py createsuperuser
 python manage.py runserver
 ```
 
-9. Open browser:
+9. Open:
 
 ```
 http://127.0.0.1:8000/
 ```
 
-## 7. Main Route URLs
+## Validation and Security Highlights
 
-- `/` : Dashboard (home)
-- `/login/` : Login page
-- `/register/` : Register page
-- `/logout/` : Logout action
-- `/upload-record/` : Upload new record (Admin only)
-- `/view-record/<id>/` : View record details
-- `/edit-record/<id>/` : Edit/Delete record (Admin only)
-- `/manage-user/<id>/` : User management actions (Admin only, POST)
-- `/admin/` : Django admin panel
-
-## 8. Validation and Security Highlights
-
-- Password checks use Django built-in validators
 - Upload/edit validates amount, type, and category
-- User management actions restricted to POST requests
-- Safe redirect handling for next URL on login
-- Role checks enforced in backend views
-
-## 9. Current Testing Status
-
-- Automated tests are not yet implemented (placeholder tests file present)
-- Functional behavior validated through manual execution flows
-
-## 10. Internship Assignment Note
-
-This repository is prepared as an internship assignment submission focused on functional requirements and role-based behavior as per the criteria set by the company.
+- Role checks are enforced in backend views
+- `manage_user` actions are POST-restricted
+- Login redirect validates safe `next` URLs
+- CSRF middleware and template CSRF tokens are in use
+- Soft-deleted records are excluded by backend query filters

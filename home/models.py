@@ -24,3 +24,4 @@ class Record(models.Model):
     time = models.DateTimeField(auto_now_add=True)
     description = models.TextField(blank=True, null=True)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    validity = models.BooleanField(default=True)
