@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'jk891jkaasdAU89?><[1mIOSAHioj231/1.,Pmatalic122i912i3?>A>17AS:dd;as[da">?[2]]]'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ["127.0.0.1", "localhost", "financemanagment.pythonanywhere.com"]
 
