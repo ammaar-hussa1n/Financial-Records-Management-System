@@ -2,6 +2,9 @@
 
 Internship assignment project for financial record management, with role-based access control, using Django.
 
+## Live Link
+https://financemanagment.pythonanywhere.com/
+
 ## Overview
 
 Implemented capabilities:
